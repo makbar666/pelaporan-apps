@@ -1,0 +1,51 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sistem Laporan Kejadian</title><link rel="stylesheet" href="assets/css/style.css"><link rel="stylesheet" href="assets/css/print.css"></head><body>
+<header><div class="brand"><img src="assets/images/clipboard-list.svg" width="26" height="26" alt="" style="filter:brightness(0) invert(1)"> <span>Sistem Laporan Kejadian<small>ADMINISTRASI & DOKUMENTASI</small></span></div><span class="local-label">Penyimpanan lokal</span></header>
+<main><nav aria-label="Navigasi utama"><button data-tab="input" class="active">1. Input Laporan Baru</button><button data-tab="recap">2. Rekapitulasi & Data Kejadian <b id="badge">0</b></button><button data-tab="preview">3. Format Laporan Resmi</button></nav>
+<div class="notice">Data hanya tersimpan di browser perangkat ini. Data dapat hilang jika penyimpanan browser dibersihkan. Ekspor cadangan JSON secara berkala.</div>
+<div id="status" role="status" aria-live="polite"></div>
+<section id="input" class="panel"><div class="section-head"><div><h1 id="form-title">Input laporan baru</h1><p>Lengkapi informasi kejadian. Kolom bertanda * wajib diisi.</p></div><span id="draft-status"></span></div>
+<form id="report-form" novalidate><div class="form-grid">
+<div class="field "><label for="number">Nomor laporan *</label>
+<input id="number" name="number" type="text" maxlength="300" required aria-describedby="error-number"><small class="error" id="error-number"></small></div>
+<div class="field "><label for="title">Judul laporan *</label>
+<input id="title" name="title" type="text" maxlength="300" required aria-describedby="error-title"><small class="error" id="error-title"></small></div>
+<div class="field "><label for="date">Tanggal kejadian *</label>
+<input id="date" name="date" type="date" maxlength="300" required aria-describedby="error-date"><small class="error" id="error-date"></small></div>
+<div class="field "><label for="time">Waktu kejadian *</label>
+<input id="time" name="time" type="time" maxlength="300" required aria-describedby="error-time"><small class="error" id="error-time"></small></div>
+<div class="field "><label for="location">Lokasi kejadian *</label>
+<input id="location" name="location" type="text" maxlength="300" required aria-describedby="error-location"><small class="error" id="error-location"></small></div>
+<div class="field "><label for="category">Kategori kejadian *</label>
+<select id="category" name="category" required aria-describedby="error-category"><option value="">Pilih kategori</option><option>Keselamatan kerja</option><option>Keamanan</option><option>Operasional</option><option>Lingkungan</option><option>Lainnya</option></select>
+<small class="error" id="error-category"></small></div>
+<div class="field "><label for="reporter">Nama pelapor *</label>
+<input id="reporter" name="reporter" type="text" maxlength="300" required aria-describedby="error-reporter"><small class="error" id="error-reporter"></small></div>
+<div class="field "><label for="division">Jabatan / divisi *</label>
+<input id="division" name="division" type="text" maxlength="300" required aria-describedby="error-division"><small class="error" id="error-division"></small></div>
+<div class="field wide"><label for="description">Deskripsi kejadian *</label>
+<textarea id="description" name="description" rows="3" maxlength="20000" required aria-describedby="error-description"></textarea>
+<small class="error" id="error-description"></small></div>
+<div class="field wide"><label for="chronology">Kronologi kejadian *</label>
+<textarea id="chronology" name="chronology" rows="3" maxlength="20000" required aria-describedby="error-chronology"></textarea>
+<small class="error" id="error-chronology"></small></div>
+<div class="field wide"><label for="impact">Dampak kejadian</label>
+<textarea id="impact" name="impact" rows="3" maxlength="20000"  aria-describedby="error-impact"></textarea>
+<small class="error" id="error-impact"></small></div>
+<div class="field wide"><label for="actions">Tindakan yang telah dilakukan</label>
+<textarea id="actions" name="actions" rows="3" maxlength="20000"  aria-describedby="error-actions"></textarea>
+<small class="error" id="error-actions"></small></div>
+<div class="field wide"><label for="recommendations">Rekomendasi tindak lanjut</label>
+<textarea id="recommendations" name="recommendations" rows="3" maxlength="20000"  aria-describedby="error-recommendations"></textarea>
+<small class="error" id="error-recommendations"></small></div>
+<div class="field wide"><label for="notes">Catatan tambahan</label>
+<textarea id="notes" name="notes" rows="3" maxlength="20000"  aria-describedby="error-notes"></textarea>
+<small class="error" id="error-notes"></small></div>
+</div><div class="actions"><button class="primary" type="submit">Simpan Laporan</button><button type="button" id="reset">Reset Form</button></div></form></section>
+<section id="recap" class="panel" hidden><div class="section-head"><div><h1>Rekapitulasi & data kejadian</h1><p>Kelola arsip dan pilih laporan untuk dicetak bersama.</p></div><button id="new-report">Tambah laporan</button></div>
+<div class="summary"><div>Total laporan <strong id="total">0</strong></div><div>Laporan bulan ini <strong id="month">0</strong></div><div>Kategori tercatat <strong id="categories">0</strong></div></div>
+<div class="filters"><label>Cari laporan<input id="search" type="search" placeholder="Nomor, judul, lokasi, pelapor…"></label><label>Dari tanggal<input id="from" type="date"></label><label>Sampai tanggal<input id="to" type="date"></label><label>Kategori<select id="category-filter"><option value="">Semua kategori</option></select></label><button id="clear-filter">Reset filter</button></div>
+<div class="actions"><button class="orange" id="print-selected">Pratinjau pilihan (<span id="selected-count">0</span>)</button><button id="export">Ekspor JSON</button><button id="import">Impor JSON</button><input type="file" id="import-file" accept="application/json,.json" hidden></div>
+<div class="table-wrap"><table><thead><tr><th><input id="select-all" type="checkbox" aria-label="Pilih semua hasil"></th><th>No.</th><th>Nomor laporan</th><th>Tanggal</th><th>Judul laporan</th><th>Lokasi</th><th>Kategori</th><th>Pelapor</th><th>Aksi</th></tr></thead><tbody id="rows"></tbody></table></div><p id="empty">Belum ada laporan. Mulai dengan membuat laporan baru.</p></section>
+<section id="preview" hidden><div class="panel print-controls"><div class="section-head"><div><h1>Format laporan resmi</h1><p>Simpan PDF melalui pilihan “Save as PDF / Simpan sebagai PDF” di dialog cetak browser.</p></div></div><div class="filters"><label>Nama organisasi<input id="organization" maxlength="200" placeholder="Nama organisasi"></label><label>Logo organisasi (opsional, PNG/JPG, maks. 500 KB)<input id="logo" type="file" accept="image/png,image/jpeg"></label><button id="remove-logo">Hapus logo</button></div><div class="actions"><button class="orange" id="pdf">Simpan PDF</button><button id="print">Cetak Laporan</button><button id="copy">Salin Teks Laporan</button></div></div><p id="preview-empty" class="panel">Pilih “Lihat” pada rekapitulasi atau pilih beberapa laporan untuk menampilkan dokumen.</p><div id="documents"></div></section>
+</main><footer>Pelaporan Kejadian · Tanpa database · Data tidak dikirim ke server</footer>
+<script id="field-schema" type="application/json">{"number":["Nomor laporan","text",true],"title":["Judul laporan","text",true],"date":["Tanggal kejadian","date",true],"time":["Waktu kejadian","time",true],"location":["Lokasi kejadian","text",true],"category":["Kategori kejadian","select",true],"reporter":["Nama pelapor","text",true],"division":["Jabatan \/ divisi","text",true],"description":["Deskripsi kejadian","textarea",true],"chronology":["Kronologi kejadian","textarea",true],"impact":["Dampak kejadian","textarea",false],"actions":["Tindakan yang telah dilakukan","textarea",false],"recommendations":["Rekomendasi tindak lanjut","textarea",false],"notes":["Catatan tambahan","textarea",false]}</script><script src="assets/js/storage.js" defer></script><script src="assets/js/report.js" defer></script><script src="assets/js/app.js" defer></script></body></html>
