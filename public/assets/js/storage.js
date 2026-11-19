@@ -1,6 +1,10 @@
 'use strict';
 window.Store = (() => {
   const keys = {reports:'incident_reports_v1',settings:'report_settings_v1',draft:'report_draft_v1'};
+  function setUser(id) {
+    keys.settings = 'report_settings_v1_' + encodeURIComponent(id || 'signed-out');
+    keys.draft = 'report_draft_v1_' + encodeURIComponent(id || 'signed-out');
+  }
   const schema = JSON.parse(document.getElementById('field-schema').textContent);
   function validate(r) {
     if (!r || typeof r !== 'object' || Array.isArray(r) || typeof r.id !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(r.id)) throw Error('Identitas laporan tidak valid.');
@@ -29,5 +33,5 @@ window.Store = (() => {
     catch { throw Error('Gagal menyimpan. Penyimpanan browser penuh atau tidak diizinkan. Ekspor cadangan sebelum melanjutkan.'); }
   }
   function remove(name) { try { localStorage.removeItem(keys[name]); } catch { throw Error('Gagal menghapus data lokal.'); } }
-  return {schema,validate,validateList,read,write,remove};
+  return {schema,validate,validateList,read,write,remove,setUser};
 })();

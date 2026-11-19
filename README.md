@@ -1,34 +1,54 @@
 # Sistem Pembuatan Laporan Kejadian
 
-Aplikasi PHP 8.2+, HTML/CSS, dan JavaScript native. Tidak memerlukan database, paket, build, atau instalasi tambahan.
+Antarmuka HTML/CSS/JavaScript native, backend Netlify Functions (Node.js 22), database Postgres di Neon, dan Managed Neon Auth. PHP 8.2 dipakai untuk merender template menjadi HTML statis sebelum commit. Tidak memakai framework UI, MySQL, atau Composer.
 
-## Menjalankan
+## Fitur dan akses
 
-Unggah seluruh isi folder ini ke `public_html` atau subfolder hosting PHP 8.2+. Buka `index.php` melalui HTTPS. Untuk pengembangan lokal: `php -S localhost:8080` dari folder proyek, lalu buka `http://localhost:8080`.
+- Login email/password; akses aplikasi hanya untuk akun dalam `incident_members` yang aktif.
+- Rekap awal **Laporan saya**. Pilihan **Semua laporan** menampilkan laporan seluruh tim yang diizinkan. Ringkasan/badge mengikuti pilihan ini.
+- Semua anggota dapat membaca, mencetak, menyalin, dan mengekspor laporan tim. Hanya pemilik dapat mengedit/menghapus; pemeriksaan dilakukan di backend.
+- Impor JSON mengganti laporan akun yang sedang masuk, bukan laporan anggota lain. Pemilik/ID dalam cadangan diabaikan; ID baru dibuat server. Konflik nomor membatalkan seluruh impor.
+- Nomor laporan unik di seluruh tim. Versi laporan mencegah edit lama menimpa perubahan baru.
 
-## Deploy ke Netlify
+## Aktivasi Neon dan Netlify
 
-Versi statis siap terbit ada di `public/` dan ikut disimpan di Git. Tidak membutuhkan PHP, Node.js, NPM, atau build di Netlify. Versi PHP di root tetap dapat digunakan pada shared hosting.
+Panduan lengkap: [database/README.md](database/README.md). Aplikasi tidak dapat login sampai konfigurasi dan tabel tersedia.
 
-1. Di Netlify, pilih impor proyek dari GitHub dan hubungkan repositori `makbar666/pelaporan-apps`.
-2. Pilih branch `main`, kosongkan Build command, dan gunakan Publish directory `public`. Konfigurasi ini sudah tersedia dalam `netlify.toml`.
-3. Deploy. Alternatif: unggah folder `public` melalui deploy manual Netlify.
+1. Siapkan branch pengembangan pada proyek Neon yang sudah ada, aktifkan Managed Neon Auth jika proyek AWS dan tidak menggunakan IP Allow/Private Networking. Jangan melepas perlindungan jaringan proyek yang sudah ada.
+2. Jalankan `database/schema.sql` di SQL Editor pada branch tersebut. Database dan Auth URL harus berasal dari branch yang sama. Data API tidak diperlukan.
+3. Daftarkan origin aplikasi (`https://nama-situs.netlify.app`) di trusted domains Neon Auth, termasuk origin preview jika digunakan.
+4. Isi environment variables Netlify pada scope **Functions**: `DATABASE_URL` (pooled), `NEON_AUTH_BASE_URL` (URL lengkap dari Auth), dan `NEON_AUTH_COOKIE_SECRET` (acak, minimal 32 karakter). Jangan masukkan credential ke Git atau direktori `public`.
+5. Buat akun dan beri akses dengan script lokal pada panduan. Tidak ada halaman pendaftaran publik di aplikasi.
+6. Netlify memakai build command `npm run build`, publish directory `public`, functions directory `netlify/functions`. Pengaturan ada di `netlify.toml`. Deploy ulang setelah env diubah.
+7. Uji dua akun pada branch pengembangan, lalu terapkan konfigurasi dan skema yang sama ke production. Jangan reset branch production untuk mengaktifkan fitur ini.
 
-Setelah mengubah `index.php`, `config.php`, atau aset, jalankan `php build-static.php` secara lokal, lalu commit perubahan sumber beserta folder `public`. Netlify menerbitkan hasil statis yang sudah dibuat tersebut.
+## Pengembangan lokal
 
-Data dari localhost tidak otomatis berpindah ke domain Netlify. Ekspor JSON dari browser lama dan impor pada situs baru.
+```powershell
+npm.cmd ci
+Copy-Item .env.example .env
+# Isi .env dengan konfigurasi branch pengembangan Neon.
+php build-static.php
+npm.cmd run build
+npm.cmd run dev
+```
 
-## Alur penggunaan
+Buka `http://localhost:8083`. `php -S` saja hanya merender antarmuka dan tidak menjalankan backend online. Hosting PHP biasa saja tidak mencukupi untuk versi online ini; backend Netlify Functions tetap dibutuhkan. Deploy manual folder `public` saja juga tidak menyertakan backend.
 
-1. Isi laporan dan simpan. Draf dipulihkan otomatis saat halaman dibuka kembali.
-2. Gunakan rekap untuk mencari, memfilter, melihat, mengedit, menghapus, atau memilih beberapa laporan.
-3. Buka pratinjau pilihan. Isi nama organisasi dan logo opsional. Pilih Cetak atau Simpan PDF, lalu pilih tujuan PDF pada dialog browser. Gunakan A4, skala 100%, dan nonaktifkan header/footer bawaan browser.
-4. Ekspor JSON secara berkala. Impor memvalidasi cadangan dan meminta konfirmasi sebelum mengganti semua laporan. Cadangan hanya mencakup laporan; tidak mencakup logo, pengaturan, dan draf.
+Setelah mengubah markup PHP atau definisi kolom di `assets/report-fields.json`, jalankan `php build-static.php` dan commit `public/index.html`. `npm run build` menyalin aset lokal dan memeriksa kesesuaian definisi kolom. Tidak ada credential yang dipakai dalam build frontend.
 
-## Data dan pemeliharaan
+## Migrasi data lokal dan cadangan
 
-Semua data berada di Local Storage browser pada origin yang sama: `incident_reports_v1`, `report_settings_v1`, `report_draft_v1`. Data tidak dikirim ke server. Berpindah browser, perangkat, domain, atau protokol memerlukan ekspor/impor. Mode privat atau membersihkan data browser dapat menghapus arsip. Pengguna lain pada profil browser yang sama dapat mengakses data ini.
+Data lama `incident_reports_v1` tetap dipertahankan. Pada browser/domain lama, gunakan **Ekspor data lokal lama**. Masuk ke akun tujuan pada aplikasi online, lalu **Impor laporan saya**. Impor maksimal 4 MB / 1.000 laporan. Impor mengganti seluruh laporan akun tersebut; ekspor cadangan online dahulu bila sudah berisi data. Logo, pengaturan, dan draf tidak disertakan dalam cadangan.
 
-Definisi kolom dan kategori ada di `config.php`. Validasi JavaScript menggunakan definisi kolom tersebut. Format dokumen ada di `assets/js/report.js`; tata cetak di `assets/css/print.css`. Data lama yang gagal validasi tidak ditimpa otomatis. Pulihkan menggunakan cadangan yang valid. Logo maksimal 500 KB; impor maksimal 20 MB dan 10.000 laporan, tetap dibatasi kuota browser.
+Draf dan pengaturan cetak disimpan dengan kunci Local Storage per ID akun; laporan online tidak dicache ke Local Storage. Pengaturan browser bukan pengganti kontrol akses perangkat: orang yang mengakses profil browser dapat membaca draf lokal. Logout mengosongkan tampilan tetapi mempertahankan draf akun tersebut untuk login berikutnya. Draf lokal versi lama belum otomatis dipindahkan ke akun.
 
-Pemilihan PDF dan pagination mengikuti mesin cetak browser; periksa pratinjau sebelum menyimpan. Salin teks menggunakan Clipboard API (HTTPS/localhost) dengan fallback browser. Tidak ada sinkronisasi, autentikasi, atau penyimpanan PDF di server.
+## Cetak dan PDF
+
+Pilih Lihat atau beberapa laporan, lalu buka pratinjau. Simpan PDF memakai tujuan PDF pada dialog cetak browser. Gunakan A4, skala 100%, dan matikan header/footer bawaan browser. Dokumen panjang dapat memakai beberapa halaman. PDF tidak disimpan di server. Logo PNG/JPG maksimal 500 KB, disimpan sebagai pengaturan lokal akun.
+
+## Pemeriksaan
+
+`npm test` memeriksa validasi, penolakan akses, kepemilikan dari sesi, pencegahan CSRF, versi perubahan, dan transaksi impor. Tes database memakai PostgreSQL WASM lokal (PGlite), bukan database Neon produksi. Tes login yang memakai mock bukan bukti koneksi live berhasil. Uji Neon Auth, trusted domains, cookie HTTPS, dan dua akun pada deployment setelah env diisi.
+
+Dependensi runtime backend: SDK resmi `@neon/auth` dan driver `@neondatabase/serverless`. PGlite hanya dependensi pengujian. Tidak ada tracking/analytics. Sesi memakai cookie HttpOnly/Secure pada origin aplikasi melalui toolkit server Neon; credential database tidak pernah dikirim ke browser. Perubahan dari perangkat lain tampil setelah **Muat ulang data**; tidak ada polling atau sinkronisasi realtime.
