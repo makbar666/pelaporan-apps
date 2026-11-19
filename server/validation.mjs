@@ -15,7 +15,7 @@ export function validateReport(input) {
     data[key] = value.trim();
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date) || !Number.isFinite(Date.parse(data.date)) || new Date(data.date).toISOString().slice(0, 10) !== data.date) throw new AppError(400, 'Tanggal kejadian tidak valid.');
-  if (!/^([01]\d|2[0-3]\d):[0-5]\d$/.test(data.time)) throw new AppError(400, 'Waktu kejadian tidak valid.');
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(data.time)) throw new AppError(400, 'Waktu kejadian tidak valid.');
   return data;
 }
 

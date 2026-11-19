@@ -73,6 +73,25 @@ test('validation rejects impossible dates, duplicate imports and unsafe input ty
   assert.throws(() => validateImport({ version: 1, reports: [report, report] }), AppError);
   assert.equal(validateReport(report).description, report.description);
 });
+test('every HH:mm value in a 24-hour day is valid, including 23:12', () => {
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute++) {
+      const time = String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
+      assert.equal(validateReport({ ...report, time }).time, time);
+    }
+  }
+  for (const time of ['24:00', '23:60', '230:12', '200:00', '2:12', '23:1', '23:12:00', '-1:00']) {
+    assert.throws(() => validateReport({ ...report, time }), AppError, time);
+  }
+});
+test('POST reports and import accept the reported 23:12 time', async () => {
+  const { handler, calls } = setup();
+  const input = { ...report, time: '23:12' };
+  assert.equal((await handler(request('reports', 'POST', input))).status, 201);
+  assert.equal(calls[0][1].time, '23:12');
+  assert.equal((await handler(request('reports/import', 'POST', { version: 1, reports: [input] }))).status, 200);
+  assert.equal(calls[1][1][0].time, '23:12');
+});
 test('database error details never escape', async () => {
   const { handler } = setup({ db: { list: async () => { throw Error('postgres://password SQL PRIVATE'); } } });
   const res = await handler(request('reports')); assert.equal(res.status, 503); assert.doesNotMatch(await res.text(), /PRIVATE|password|postgres/);
