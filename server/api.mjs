@@ -38,6 +38,7 @@ export function createHandler({ env = process.env, makeAuth = authFor, makeDatab
         return reply({ ok: true, count: data.length });
       }
       const match = /^reports\/([^/]+)$/.exec(path);
+      if (match && request.method === 'GET') return reply({ report: await db.get(validId(match[1])) });
       if (match && ['PUT', 'DELETE'].includes(request.method)) {
         const reportId = validId(match[1]);
         const body = await readJson(request);

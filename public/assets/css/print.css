@@ -4,5 +4,5 @@
  body>header,body>footer,#auth-panel,main>nav,.notice,#status,#input,#recap,.print-controls,#preview-empty{display:none!important}
  main,#preview,#documents{display:block!important;margin:0!important;padding:0!important;max-width:none!important;width:auto!important}
  .document{border:0!important;margin:0!important;padding:0!important;width:auto!important;max-width:none!important;font:12pt/1.5 'Times New Roman',serif;color:#000!important;box-shadow:none!important;break-after:page}
- .document:last-child{break-after:auto}.document h3,.report-section h4{break-after:avoid}.document p{orphans:3;widows:3}.letterhead,.signature{break-inside:avoid}.document dl{grid-template-columns:145px 1fr}.document img{max-width:65px;max-height:70px}button{display:none!important}
+ .document:last-child{break-after:auto}.document h3,.report-section h4{break-after:avoid}.document p{orphans:3;widows:3}.letterhead,.signature{break-inside:avoid}.document dl{grid-template-columns:145px 1fr}.document img{max-width:65px;max-height:70px}.document .report-photos img{max-width:100%;max-height:95mm}#detail-dialog,.workspace-title{display:none!important}button{display:none!important}
 }

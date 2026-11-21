@@ -8,16 +8,9 @@ window.Store = (() => {
   const schema = JSON.parse(document.getElementById('field-schema').textContent);
   function validate(r) {
     if (!r || typeof r !== 'object' || Array.isArray(r) || typeof r.id !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(r.id)) throw Error('Identitas laporan tidak valid.');
-    const clean = {id:r.id};
-    for (const [key,[label,type,required]] of Object.entries(schema)) {
-      const v = r[key];
-      if (typeof v !== 'string' || v.length > (type === 'textarea' ? 20000 : 300) || (required && !v.trim())) throw Error(label + ' tidak valid atau belum diisi.');
-      clean[key] = v.trim();
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(clean.date) || !Number.isFinite(Date.parse(clean.date)) || new Date(clean.date).toISOString().slice(0,10) !== clean.date) throw Error('Tanggal kejadian tidak valid.');
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(clean.time)) throw Error('Waktu kejadian tidak valid.');
-    return clean;
+    return { ...IncidentModel.validate(r, schema), id: r.id };
   }
+
   function validateList(data) {
     if (!Array.isArray(data) || data.length > 10000) throw Error('Daftar laporan tidak valid (maksimal 10.000 laporan).');
     const result = data.map(validate);

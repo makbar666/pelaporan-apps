@@ -1,3 +1,4 @@
+import '../assets/js/model.js';
 import fields from '../assets/report-fields.json' with { type: 'json' };
 
 export class AppError extends Error {
@@ -5,18 +6,8 @@ export class AppError extends Error {
 }
 
 export function validateReport(input) {
-  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new AppError(400, 'Data laporan tidak valid.');
-  const data = {};
-  for (const [key, [label, type, required]] of Object.entries(fields)) {
-    const value = input[key];
-    if (typeof value !== 'string' || value.length > (type === 'textarea' ? 20000 : 300) || (required && !value.trim())) {
-      throw new AppError(400, label + ' tidak valid atau belum diisi.');
-    }
-    data[key] = value.trim();
-  }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date) || !Number.isFinite(Date.parse(data.date)) || new Date(data.date).toISOString().slice(0, 10) !== data.date) throw new AppError(400, 'Tanggal kejadian tidak valid.');
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(data.time)) throw new AppError(400, 'Waktu kejadian tidak valid.');
-  return data;
+  try { return globalThis.IncidentModel.validate(input, fields); }
+  catch (error) { throw new AppError(400, error.message); }
 }
 
 export function validateImport(input) {
@@ -31,7 +22,7 @@ export function validId(id) {
   return id;
 }
 
-export async function readJson(request, max = 750000) {
+export async function readJson(request, max = 1600000) {
   if (!request.headers.get('content-type')?.startsWith('application/json')) throw new AppError(415, 'Gunakan format JSON.');
   if (Number(request.headers.get('content-length')) > max) throw new AppError(413, 'Data terlalu besar.');
   const reader = request.body?.getReader();

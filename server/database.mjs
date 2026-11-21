@@ -3,7 +3,7 @@ import { AppError } from './validation.mjs';
 
 export function database(connectionString, sql = neon(connectionString)) {
   const columns = 'r.id, r.owner_id, r.data, r.version, m.display_name AS owner_name';
-  const map = row => ({ ...row.data, id: row.id, ownerId: row.owner_id, ownerName: row.owner_name, version: row.version });
+  const map = row => ({ ...row.data, id: row.id, ownerId: row.owner_id, ownerName: row.owner_name, version: row.version, photoCount: row.photo_count ?? row.data.photos?.length ?? 0 });
   return {
     async member(id) {
       const [row] = await sql.query('SELECT user_id, display_name FROM incident_members WHERE user_id = $1 AND enabled = true', [id]);
@@ -11,8 +11,13 @@ export function database(connectionString, sql = neon(connectionString)) {
       return { id: row.user_id, name: row.display_name };
     },
     async list(userId, scope, offset) {
-      const rows = await sql.query(`SELECT ${columns} FROM incident_reports r JOIN incident_members m ON m.user_id = r.owner_id WHERE ($1::boolean OR r.owner_id = $2) ORDER BY r.created_at DESC, r.id LIMIT 101 OFFSET $3`, [scope === 'all', userId, offset]);
+      const rows = await sql.query(`SELECT r.id, r.owner_id, r.data - 'photos' AS data, r.version, m.display_name AS owner_name, jsonb_array_length(COALESCE(r.data->'photos','[]'::jsonb)) AS photo_count FROM incident_reports r JOIN incident_members m ON m.user_id = r.owner_id WHERE ($1::boolean OR r.owner_id = $2) ORDER BY r.created_at DESC, r.id LIMIT 101 OFFSET $3`, [scope === 'all', userId, offset]);
       return { reports: rows.slice(0, 100).map(map), nextOffset: rows.length > 100 ? offset + 100 : null };
+    },
+    async get(id) {
+      const [row] = await sql.query(`SELECT ${columns} FROM incident_reports r JOIN incident_members m ON m.user_id = r.owner_id WHERE r.id = $1`, [id]);
+      if (!row) throw new AppError(404, 'Laporan tidak ditemukan.');
+      return map(row);
     },
     async create(userId, data) {
       const [row] = await sql.query('INSERT INTO incident_reports (id, owner_id, report_number, data) VALUES (gen_random_uuid(), $1, $2, $3::jsonb) RETURNING id, owner_id, data, version', [userId, data.number, JSON.stringify(data)]);

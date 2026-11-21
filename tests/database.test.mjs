@@ -26,6 +26,11 @@ test('Postgres: migration, ownership, versions, shared views, import isolation a
     await assert.rejects(db.member('disabled'), error => error.status === 403);
     const a = await db.create('alice', { number: 'A-1', description: 'Laporan Ayu' });
     const b = await db.create('bob', { number: 'B-1', description: 'Laporan Budi' });
+    const withPhoto=await db.update('bob', b.id, 1, { number:'B-1', description:'Foto', photos:['data:image/jpeg;base64,/9j/AAAA'] });
+    assert.equal(withPhoto.version,2);
+    assert.equal((await db.get(b.id)).photos.length,1);
+    const listing=(await db.list('alice','all',0)).reports.find(r=>r.id===b.id);
+    assert.equal(listing.photos,undefined);assert.equal(listing.photoCount,1);
     assert.equal((await db.list('alice', 'mine', 0)).reports.length, 1);
     assert.equal((await db.list('alice', 'all', 0)).reports.length, 2);
     await assert.rejects(db.update('alice', b.id, 1, { number: 'HACK' }), e => e.status === 409);
@@ -40,6 +45,6 @@ test('Postgres: migration, ownership, versions, shared views, import isolation a
     assert.equal(all.length, 2); assert.ok(all.some(r => r.id === b.id && r.number === 'B-1'));
     await db.replaceOwn('alice', []);
     all = (await db.list('bob', 'all', 0)).reports; assert.equal(all.length, 1); assert.equal(all[0].id, b.id);
-    await db.remove('bob', b.id, 1); assert.equal((await db.list('bob', 'all', 0)).reports.length, 0);
+    await db.remove('bob', b.id, 2); assert.equal((await db.list('bob', 'all', 0)).reports.length, 0);
   } finally { await pg.close(); }
 });

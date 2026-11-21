@@ -1,16 +1,157 @@
 {
-  "number": ["Nomor laporan", "text", true],
-  "title": ["Judul laporan", "text", true],
-  "date": ["Tanggal kejadian", "date", true],
-  "time": ["Waktu kejadian", "time", true],
-  "location": ["Lokasi kejadian", "text", true],
-  "category": ["Kategori kejadian", "select", true],
-  "reporter": ["Nama pelapor", "text", true],
-  "division": ["Jabatan / divisi", "text", true],
-  "description": ["Deskripsi kejadian", "textarea", true],
-  "chronology": ["Kronologi kejadian", "textarea", true],
-  "impact": ["Dampak kejadian", "textarea", false],
-  "actions": ["Tindakan yang telah dilakukan", "textarea", false],
-  "recommendations": ["Rekomendasi tindak lanjut", "textarea", false],
-  "notes": ["Catatan tambahan", "textarea", false]
+  "number": [
+    "Nomor laporan",
+    "text",
+    true
+  ],
+  "title": [
+    "Judul laporan",
+    "text",
+    false
+  ],
+  "date": [
+    "Tanggal kejadian",
+    "date",
+    true
+  ],
+  "time": [
+    "Waktu kejadian",
+    "time",
+    true
+  ],
+  "location": [
+    "Lokasi kejadian",
+    "text",
+    false
+  ],
+  "category": [
+    "Jenis bencana",
+    "select",
+    true
+  ],
+  "reporter": [
+    "Petugas pelapor",
+    "text",
+    true
+  ],
+  "division": [
+    "Jabatan / divisi",
+    "text",
+    true
+  ],
+  "description": [
+    "Deskripsi kejadian",
+    "textarea",
+    false
+  ],
+  "chronology": [
+    "Kronologi kejadian",
+    "textarea",
+    true
+  ],
+  "impact": [
+    "Dampak kejadian",
+    "textarea",
+    false
+  ],
+  "actions": [
+    "Upaya penanganan",
+    "textarea",
+    false
+  ],
+  "recommendations": [
+    "Rekomendasi tindak lanjut",
+    "textarea",
+    false
+  ],
+  "notes": [
+    "Catatan tambahan",
+    "textarea",
+    false
+  ],
+  "recordType": [
+    "Jenis rekaman",
+    "hidden",
+    false
+  ],
+  "district": [
+    "Kabupaten / kota",
+    "select",
+    false
+  ],
+  "subdistrict": [
+    "Kecamatan",
+    "text",
+    false
+  ],
+  "village": [
+    "Desa / kelurahan",
+    "text",
+    false
+  ],
+  "deaths": [
+    "Meninggal dunia (jiwa)",
+    "number",
+    false
+  ],
+  "injured": [
+    "Luka-luka (jiwa)",
+    "number",
+    false
+  ],
+  "evacuated": [
+    "Mengungsi (jiwa)",
+    "number",
+    false
+  ],
+  "affected": [
+    "Terdampak (jiwa)",
+    "number",
+    false
+  ],
+  "houseHeavy": [
+    "Rusak berat (unit)",
+    "number",
+    false
+  ],
+  "houseMedium": [
+    "Rusak sedang (unit)",
+    "number",
+    false
+  ],
+  "houseLight": [
+    "Rusak ringan (unit)",
+    "number",
+    false
+  ],
+  "houseFlooded": [
+    "Terendam (unit)",
+    "number",
+    false
+  ],
+  "facilities": [
+    "Fasilitas umum terdampak",
+    "textarea",
+    false
+  ],
+  "loss": [
+    "Estimasi kerugian (Rp)",
+    "number",
+    false
+  ],
+  "source": [
+    "Sumber informasi",
+    "text",
+    false
+  ],
+  "handlingStatus": [
+    "Status penanganan",
+    "select",
+    false
+  ],
+  "photos": [
+    "Dokumentasi foto",
+    "photos",
+    false
+  ]
 }

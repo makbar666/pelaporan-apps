@@ -18,7 +18,7 @@ with sync_playwright() as p:
     page.on('pageerror', lambda e: errors.append(str(e)))
     state = {'user': None, 'reports': [], 'fail_save': False}
     base = dict(number='B-1', title='Laporan anggota lain', date='2026-11-19', time='10:30',
-                location='Gudang', category='Keamanan', reporter='Budi', division='Operasional',
+                location='Gudang', category='Banjir', reporter='Budi', division='Operasional',
                 description='Deskripsi', chronology='Kronologi', impact='', actions='', recommendations='', notes='')
     state['reports'].append(dict(base, id=str(uuid.uuid4()), ownerId='bob', ownerName='Budi', version=1))
 
@@ -28,7 +28,9 @@ with sync_playwright() as p:
         path = url.path.removeprefix('/api/')
         body = req.post_data_json if req.post_data else {}
         status, data = 200, {}
-        if path == 'login':
+        if path.startswith('reports/') and req.method == 'GET':
+            data = {'report': next(r for r in state['reports'] if r['id'] == path.split('/')[-1])}
+        elif path == 'login':
             state['user'] = 'bob' if body['email'].startswith('bob') else 'alice'
             data = {'user': dict(id=state['user'], name=state['user'].title())}
         elif path == 'logout':
@@ -83,9 +85,23 @@ with sync_playwright() as p:
     for k, v in base.items():
         if k == 'category': page.locator('#category').select_option(v)
         else: page.locator('#' + k).fill(v)
+    page.locator('#district').select_option('Kab. Demak')
+    page.locator('#subdistrict').fill('Demak')
+    page.locator('#village').fill('Bintoro')
+    page.locator('#source').fill('BPBD Kabupaten')
+    page.locator('#affected').fill('40')
+    page.locator('#houseFlooded').fill('10')
+    page.locator('#loss').fill('10000000')
     page.locator('#number').fill('A-1')
     page.locator('#title').fill('Uji <script>alert(1)</script>')
     page.locator('#description').fill('Teks panjang. ' * 1000)
+    page.locator('#affected').fill('150')
+    page.locator('#evacuated').fill('20')
+    page.locator('#houseHeavy').fill('2')
+    png = page.evaluate('''() => { const c=document.createElement('canvas');c.width=100;c.height=100;c.getContext('2d').fillRect(0,0,100,100);return c.toDataURL('image/png').split(',')[1]; }''')
+    import base64
+    page.locator('#photos').set_input_files({'name':'foto.png','mimeType':'image/png','buffer':base64.b64decode(png)})
+    page.wait_for_function("document.querySelectorAll('#photo-previews img').length===1")
     page.wait_for_timeout(700)
     page.reload()
     page.wait_for_selector('#application', state='visible')
@@ -99,6 +115,8 @@ with sync_playwright() as p:
     page.locator('#report-form button[type=submit]').click()
     page.wait_for_selector('#recap', state='visible')
     assert page.locator('#rows tr').count() == 1
+    assert page.locator('#affected-total').inner_text()=='150'
+    assert state['reports'][-1]['photos'][0].startswith('data:image/jpeg;base64,')
     page.locator('#scope').select_option('all')
     page.wait_for_function("document.querySelectorAll('#rows tr').length===2")
     other = page.locator('#rows tr').filter(has_text='B-1')
@@ -111,17 +129,32 @@ with sync_playwright() as p:
     page.locator('#location').fill('Lokasi diperbarui')
     page.locator('#report-form button[type=submit]').click()
     page.wait_for_selector('#recap', state='visible')
-    assert 'Lokasi diperbarui' in page.locator('#rows').inner_text()
+    assert any(r.get('location')=='Lokasi diperbarui' for r in state['reports'])
     page.locator('#scope').select_option('all')
     page.wait_for_function("document.querySelectorAll('#rows tr').length===2")
+    page.locator('select[aria-label="Ubah status A-1"]').select_option('Selesai / Tuntas')
+    page.wait_for_function("!document.getElementById('scope').disabled")
+    assert next(r for r in state['reports'] if r['number']=='A-1')['handlingStatus']=='Selesai / Tuntas'
+    page.locator('#status-filter').select_option('Selesai / Tuntas')
+    assert page.locator('#rows tr').count()==1
+    page.locator('#clear-filter').click()
+    page.locator('#rows tr').filter(has_text='A-1').get_by_role('button',name='Detail',exact=True).click()
+    page.wait_for_selector('#detail-dialog',state='visible')
+    assert page.locator('#detail-dialog img').count()==1
+    page.locator('#close-detail').click()
     page.locator('#search').fill('tidak-ada')
     assert page.locator('#rows tr').count() == 0
     page.locator('#clear-filter').click()
-    page.locator('#category-filter').select_option('Keamanan')
+    page.locator('#category-filter').select_option('Banjir')
     assert page.locator('#rows tr').count() == 2
     page.locator('#from').fill('2027-01-01')
     assert page.locator('#rows tr').count() == 0
     page.locator('#clear-filter').click()
+    page.locator('#preview-summary').click()
+    assert 'REKAPITULASI' in page.locator('#documents').inner_text()
+    page.locator('[data-tab=recap]').click()
+    page.wait_for_timeout(300)
+    page.screenshot(path=os.path.join(tempfile.gettempdir(),'bpbd-desktop.png'),full_page=True)
     page.locator('#select-all').check()
     page.locator('#print-selected').click()
     assert page.locator('.document').count() == 2

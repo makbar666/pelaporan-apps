@@ -1,8 +1,18 @@
-# Sistem Pembuatan Laporan Kejadian
+# Sistem Pelaporan Bencana Pusdalops PB
 
 Antarmuka HTML/CSS/JavaScript native, backend Netlify Functions (Node.js 22), database Postgres di Neon, dan Managed Neon Auth. PHP 8.2 dipakai untuk merender template menjadi HTML statis sebelum commit. Tidak memakai framework UI, MySQL, atau Composer.
 
 ## Fitur dan akses
+
+Antarmuka dan alur dirombak berdasarkan analisis lokal `analisis-rea/sistem-pelaporan-bpbd/ANALISIS.md`: input kejadian, rekapitulasi, dan laporan resmi. Cakupan meliputi 35 kabupaten/kota Jawa Tengah, kecamatan/desa, jenis bencana, korban (jiwa), rumah terdampak (unit), fasilitas umum, estimasi kerugian, upaya, status penanganan, sumber informasi, dan petugas.
+
+- Statistik dan grafik batang mengikuti seluruh filter: kepemilikan, wilayah, jenis, status, periode, dan pencarian. Grafik dibuat dengan HTML/CSS lokal tanpa Chart.js/CDN. Jumlah penduduk adalah akumulasi laporan, bukan penduduk unik.
+- Detail kejadian, perubahan status cepat khusus pemilik, dan foto terkompresi tersedia. Foto maksimal 3 per laporan; sumber PNG/JPEG/WebP maksimal 10 MB dan 40 megapiksel, lalu diubah ke JPEG maksimal sekitar 135 KB per foto.
+- Foto disimpan online dalam JSONB Neon dengan batas ukuran, bukan di Local Storage sebagai arsip utama. Daftar API tidak mengirim foto; endpoint detail mengambil foto saat diperlukan. Kapasitas foto ikut mengurangi kuota database Neon. Untuk volume foto besar, pindahkan ke object storage melalui pekerjaan terpisah.
+- Dokumen A4 tersedia per kejadian, gabungan pilihan, atau rekap hasil filter. Tersedia salin teks untuk WhatsApp, CSV dengan pengutipan semua sel dan perlindungan formula, serta JSON lengkap termasuk foto.
+- Cadangan JSON mengikuti hasil filter atau pilihan checkbox. Impor tetap maksimal 4 MB / 1.000 laporan dan mengganti seluruh laporan akun aktif. Bila cadangan terlalu besar, pilih lebih sedikit laporan; CSV tidak mencakup foto dan bukan backup lengkap.
+- Laporan lama tetap tersimpan dengan ID, pemilik, dan versi yang sama; kolom bencana yang belum tersedia ditampilkan kosong/0 tanpa mengubah isi database. Draf lama tetap dapat dipulihkan sebagai rekaman legacy. Tidak perlu migrasi SQL baru untuk perombakan ini: kolom `data` yang ada memakai JSONB.
+- Tidak ada data contoh otomatis atau tombol yang mengganti arsip dengan data dummy.
 
 - Login email/password; akses aplikasi hanya untuk akun dalam `incident_members` yang aktif.
 - Rekap awal **Laporan saya**. Pilihan **Semua laporan** menampilkan laporan seluruh tim yang diizinkan. Ringkasan/badge mengikuti pilihan ini.
@@ -35,7 +45,7 @@ npm.cmd run dev
 
 Buka `http://localhost:8083`. `php -S` saja hanya merender antarmuka dan tidak menjalankan backend online. Hosting PHP biasa saja tidak mencukupi untuk versi online ini; backend Netlify Functions tetap dibutuhkan. Deploy manual folder `public` saja juga tidak menyertakan backend.
 
-Setelah mengubah markup PHP atau definisi kolom di `assets/report-fields.json`, jalankan `php build-static.php` dan commit `public/index.html`. `npm run build` menyalin aset lokal dan memeriksa kesesuaian definisi kolom. Tidak ada credential yang dipakai dalam build frontend.
+Setelah mengubah markup PHP atau definisi kolom di `assets/report-fields.json`, jalankan `php build-static.php` dan commit `public/index.html`. Validasi bersama ada di `assets/js/model.js` (dipakai browser dan backend), termasuk daftar wilayah/jenis/status. `npm run build` menyalin aset lokal dan memeriksa kesesuaian definisi kolom. Tidak ada credential yang dipakai dalam build frontend.
 
 ## Migrasi data lokal dan cadangan
 
